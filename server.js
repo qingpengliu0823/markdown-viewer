@@ -6,7 +6,7 @@ const { buildTree } = require('./lib/fileTree');
 const { searchFiles } = require('./lib/searchIndex');
 const fs = require('fs');
 
-const ROOT = path.resolve(process.argv[2] || '.');
+const ROOT = path.resolve(process.argv[2] || __dirname);
 const PORT = process.env.PORT || 3000;
 
 const app = express();
