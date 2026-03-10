@@ -1,0 +1,19 @@
+{
+  "name": "markdown-viewer",
+  "version": "1.0.0",
+  "description": "Local web app for viewing multiple markdown files with live reload",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "express": "^4.21.2",
+    "highlight.js": "^11.11.1",
+    "katex": "^0.16.38",
+    "markdown-it": "^14.1.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "markdown-it-texmath": "^1.0.0",
+    "ws": "^8.18.0"
+  }
+}

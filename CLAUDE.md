@@ -1,0 +1,69 @@
+# Markdown Viewer
+
+Local web app that renders multiple markdown files simultaneously in browser tabs with live reload.
+
+## Tech Stack
+
+- **Backend**: Node.js + Express, ws (WebSocket), chokidar (file watching)
+- **Frontend**: Vanilla JS (no framework, no build step), markdown-it + KaTeX (math), highlight.js (code)
+- **All frontend JS uses the IIFE module pattern** (e.g., `const Tabs = (() => { ... return { open, close }; })();`)
+
+## Project Structure
+
+```
+server.js              — Express server, WebSocket, chokidar, all API routes, native file picker
+lib/fileTree.js        — Recursive .md file scanner for directory tree
+lib/searchIndex.js     — Content search across .md files
+public/index.html      — SPA shell (loads all JS via <script> tags, order matters)
+public/css/style.css   — All styles (layout, GitHub-flavored markdown, modals, resizable sidebar)
+public/js/renderer.js  — markdown-it with KaTeX math + highlight.js + task lists (lazy init)
+public/js/tabs.js      — Tab bar + content panes (depends on Renderer)
+public/js/filepicker.js — In-browser directory browser modal (legacy, kept for fallback)
+public/js/sidebar.js   — File tree, external files, sidebar toggle + drag-resize (depends on Tabs, FilePicker)
+public/js/search.js    — Debounced search (depends on Sidebar)
+public/js/websocket.js — Auto-reconnecting WebSocket client (depends on Tabs, Sidebar)
+public/js/upload.js    — Upload button + drag-and-drop (depends on Sidebar, Tabs)
+public/js/app.js       — Bootstraps the app (loads last)
+```
+
+## Script Load Order (Critical)
+
+Scripts in index.html must load in dependency order. markdown-it and KaTeX are served locally via `/vendor/` routes. highlight.js loads from CDN. The `texmath` module needs a `module` shim to work in the browser.
+
+## API Routes
+
+```
+GET    /api/tree              — JSON directory tree of .md files in root
+GET    /api/file?path=        — Raw markdown content (relative + absolute paths)
+POST   /api/pick-file         — Opens native macOS Finder dialog, returns selected path
+POST   /api/open              — Register external file by absolute path, starts watching
+GET    /api/external          — List externally opened (linked) files
+DELETE /api/external?path=    — Stop watching external file (does NOT delete from disk)
+DELETE /api/file?path=        — Delete file from served root (ACTUALLY deletes from disk)
+POST   /api/upload            — Upload .md files (writes to disk in root)
+GET    /api/search?q=         — Search across all .md files
+GET    /api/browse?dir=       — Browse filesystem directories (for in-browser file picker)
+```
+
+## Key Conventions
+
+- **Path security**: `safePath()` validates relative paths stay within ROOT. External/absolute paths allowed only through `/api/open` and `/api/file` via `resolveFilePath()`.
+- **External files** are watched via a separate chokidar instance. They appear under "Linked Files" in sidebar with a link icon. Removing them only stops watching — no disk deletion.
+- **Lazy initialization**: `Renderer` initializes markdown-it on first render call, not at load time, to avoid race conditions with vendor scripts.
+- **Native file picker**: `POST /api/pick-file` uses `osascript` to open macOS Finder dialog. macOS only.
+- **Resizable sidebar**: Drag the right edge to resize (min 180px, max 50vw). Toggle button inside sidebar header.
+- **No build step**: All frontend code is plain JS served as static files.
+
+## Running
+
+```bash
+npm install
+npm start                    # serves current directory on :3000
+npm start /path/to/notes     # serves specified folder
+```
+
+## Common Tasks
+
+- **Adding a vendor lib**: Install via npm, add `express.static` route in server.js for `/vendor/`, add `<script>` in index.html in correct order.
+- **Adding a frontend module**: Create file in `public/js/`, use IIFE pattern, add `<script>` in index.html respecting dependency order.
+- **Adding an API route**: Add in server.js. Use `safePath()` for root-relative paths, `resolveFilePath()` for absolute paths.
