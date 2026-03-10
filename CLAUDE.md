@@ -49,6 +49,7 @@ GET    /api/browse?dir=       — Browse filesystem directories (for in-browser 
 
 - **Path security**: `safePath()` validates relative paths stay within ROOT. External/absolute paths allowed only through `/api/open` and `/api/file` via `resolveFilePath()`.
 - **External files** are watched via a separate chokidar instance. They appear under "Linked Files" in sidebar with a link icon. Removing them only stops watching — no disk deletion.
+- **Math delimiters**: texmath is configured with `['dollars', 'brackets', 'beg_end']` to support `$...$`, `$$...$$`, `\(...\)`, `\[...\]`, and `\begin{...}...\end{...}`. Note: bare LaTeX without delimiters (e.g., `q_{n\tau}` not wrapped in `$...$`) will NOT render — the source markdown must use proper delimiters.
 - **Lazy initialization**: `Renderer` initializes markdown-it on first render call, not at load time, to avoid race conditions with vendor scripts.
 - **Native file picker**: `POST /api/pick-file` uses `osascript` to open macOS Finder dialog. macOS only.
 - **Resizable sidebar**: Drag the right edge to resize (min 180px, max 50vw). Toggle button inside sidebar header.

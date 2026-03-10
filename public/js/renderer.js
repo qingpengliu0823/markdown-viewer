@@ -19,11 +19,11 @@ const Renderer = (() => {
       },
     });
 
-    // LaTeX math support via KaTeX
+    // LaTeX math support via KaTeX (support all delimiter styles)
     if (window.texmath && window.katex) {
       md.use(window.texmath, {
         engine: window.katex,
-        delimiters: 'dollars',
+        delimiters: ['dollars', 'brackets', 'beg_end'],
       });
     }
 
