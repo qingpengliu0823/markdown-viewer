@@ -13,11 +13,13 @@ Local web app that renders multiple markdown files simultaneously in browser tab
 ```
 server.js              — Express server, WebSocket, chokidar, all API routes, native file picker
 lib/fileTree.js        — Recursive .md file scanner for directory tree
+lib/renderMarkdown.js  — Server-side markdown-it + KaTeX + hljs renderer (for PDF export)
 lib/searchIndex.js     — Content search across .md files
 public/index.html      — SPA shell (loads all JS via <script> tags, order matters)
 public/css/style.css   — All styles (layout, GitHub-flavored markdown, modals, resizable sidebar)
 public/js/renderer.js  — markdown-it with KaTeX math + highlight.js + task lists (lazy init)
 public/js/tabs.js      — Tab bar + content panes (depends on Renderer)
+public/js/export.js    — PDF export button + download logic (depends on Tabs)
 public/js/filepicker.js — In-browser directory browser modal (legacy, kept for fallback)
 public/js/sidebar.js   — File tree, external files, sidebar toggle + drag-resize (depends on Tabs, FilePicker)
 public/js/search.js    — Debounced search (depends on Sidebar)
@@ -43,6 +45,7 @@ DELETE /api/file?path=        — Delete file from served root (ACTUALLY deletes
 POST   /api/upload            — Upload .md files (writes to disk in root)
 GET    /api/search?q=         — Search across all .md files
 GET    /api/browse?dir=       — Browse filesystem directories (for in-browser file picker)
+POST   /api/export-pdf        — Generate PDF from markdown file (Puppeteer), returns application/pdf
 ```
 
 ## Key Conventions

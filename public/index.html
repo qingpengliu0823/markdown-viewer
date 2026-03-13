@@ -40,7 +40,13 @@
       <button id="sidebar-show" title="Show sidebar" class="hidden">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.646 3.646a.5.5 0 0 1 .708 0l5 5a.5.5 0 0 1 0 .708l-5 5a.5.5 0 0 1-.708-.708L9.293 9 4.646 4.354a.5.5 0 0 1 0-.708z"/></svg>
       </button>
-      <div id="tab-bar"></div>
+      <div id="tab-bar-wrapper">
+        <div id="tab-bar"></div>
+        <button id="export-pdf-btn" title="Export to PDF">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M4.5 2A1.5 1.5 0 0 0 3 3.5v9A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V6.621a1.5 1.5 0 0 0-.44-1.06L9.94 2.94A1.5 1.5 0 0 0 8.878 2.5H4.5z"/><path d="M5.5 9.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z" fill="white"/></svg>
+          <span>PDF</span>
+        </button>
+      </div>
       <div id="tab-content"></div>
       <div id="empty-state">
         <p>Select a markdown file from the sidebar, or drag &amp; drop .md files here.</p>
@@ -77,6 +83,7 @@
   <script>if(window.module&&window.module.exports){window.texmath=window.module.exports;delete window.module;}</script>
   <script src="/js/renderer.js"></script>
   <script src="/js/tabs.js"></script>
+  <script src="/js/export.js"></script>
   <script src="/js/filepicker.js"></script>
   <script src="/js/sidebar.js"></script>
   <script src="/js/search.js"></script>

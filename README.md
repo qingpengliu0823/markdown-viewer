@@ -17,6 +17,7 @@ Built as an alternative to VS Code's single-file markdown preview and aging desk
 - **LaTeX math** — renders `$inline$` and `$$block$$` math via KaTeX
 - **Syntax highlighting** — code blocks highlighted via highlight.js
 - **GitHub-style rendering** — clean, familiar markdown styling with task lists, tables, blockquotes
+- **PDF export** — export the currently viewed file to PDF with full math and syntax highlighting preserved
 
 ## Quick Start
 
@@ -60,7 +61,21 @@ Then open [http://localhost:3000](http://localhost:3000).
 | Delete a file | Hover over a file in the sidebar, click **x** |
 | Search | Type in the search box — results appear instantly |
 | Resize sidebar | Drag the right edge of the sidebar |
+| Export to PDF | Click the **PDF** button next to the tab bar |
 | Hide/show sidebar | Click the chevron in the sidebar header |
+
+## Customizing PDF Layout
+
+The PDF export styling is defined in `server.js` inside the `POST /api/export-pdf` route. Look for the inline `<style>` block in the HTML template (search for `"PDF overrides"`). Common tweaks:
+
+| What | Where | Example |
+|------|-------|---------|
+| Base font size | `body { font-size: ... }` | `13px` or `12px` for a more compact PDF |
+| Formula size | `.katex { font-size: ... }` | `1em !important` (KaTeX defaults to `1.21em`, making math larger than body text) |
+| Heading sizes | `.markdown-body h1`, `h2`, etc. | `h1 { font-size: 1.6em; }` |
+| Page margins | `page.pdf({ margin: ... })` | `{ top: '15mm', right: '15mm', bottom: '15mm', left: '15mm' }` |
+| Line spacing | `.markdown-body { line-height: ... }` | `1.4` for tighter lines (default is `1.6`) |
+| Paper size | `page.pdf({ format: ... })` | `'Letter'` instead of `'A4'` |
 
 ## Tech Stack
 

@@ -106,5 +106,9 @@ const Tabs = (() => {
     return div.innerHTML;
   }
 
-  return { open, close, reload, remove, activate };
+  function getActivePath() {
+    return activeId;
+  }
+
+  return { open, close, reload, remove, activate, getActivePath };
 })();

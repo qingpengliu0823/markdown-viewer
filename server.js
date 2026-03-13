@@ -4,6 +4,7 @@ const { WebSocketServer } = require('ws');
 const chokidar = require('chokidar');
 const { buildTree } = require('./lib/fileTree');
 const { searchFiles } = require('./lib/searchIndex');
+const { render: renderMarkdown } = require('./lib/renderMarkdown');
 const fs = require('fs');
 
 const ROOT = path.resolve(process.argv[2] || __dirname);
@@ -225,6 +226,104 @@ app.get('/api/search', async (req, res) => {
   }
 });
 
+// PDF export via Puppeteer
+let pdfBrowser = null;
+
+async function getPdfBrowser() {
+  if (!pdfBrowser || !pdfBrowser.connected) {
+    const puppeteer = require('puppeteer');
+    pdfBrowser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+  }
+  return pdfBrowser;
+}
+
+app.post('/api/export-pdf', async (req, res) => {
+  const filePath = req.body.path;
+  if (!filePath) return res.status(400).json({ error: 'path required' });
+
+  const resolved = resolveFilePath(filePath);
+  if (!resolved) return res.status(403).json({ error: 'access denied' });
+
+  let markdown;
+  try {
+    markdown = await fs.promises.readFile(resolved, 'utf8');
+  } catch {
+    return res.status(404).json({ error: 'file not found' });
+  }
+
+  const htmlBody = renderMarkdown(markdown);
+
+  // Inline KaTeX CSS with fonts as file:// URLs
+  const katexCssPath = path.join(__dirname, 'node_modules/katex/dist/katex.min.css');
+  let katexCss = await fs.promises.readFile(katexCssPath, 'utf8');
+  const katexFontDir = path.join(__dirname, 'node_modules/katex/dist/fonts').replace(/\\/g, '/');
+  katexCss = katexCss.replace(/url\(fonts\//g, `url(file://${katexFontDir}/`);
+
+  // Inline highlight.js GitHub theme
+  const hljsCssPath = path.join(__dirname, 'node_modules/highlight.js/styles/github.css');
+  const hljsCss = await fs.promises.readFile(hljsCssPath, 'utf8');
+
+  // Inline markdown-body styles from our stylesheet
+  const styleCssPath = path.join(__dirname, 'public/css/style.css');
+  const styleCss = await fs.promises.readFile(styleCssPath, 'utf8');
+
+  const fullHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>${katexCss}</style>
+  <style>${hljsCss}</style>
+  <style>${styleCss}</style>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      color: #1f2328;
+      background: white;
+      padding: 0;
+      margin: 0;
+    }
+    .markdown-body {
+      max-width: none;
+      padding: 0;
+      margin: 0;
+    }
+    pre { page-break-inside: avoid; }
+    h1, h2, h3, h4, h5, h6 { page-break-after: avoid; }
+    table { page-break-inside: avoid; }
+    img { page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+  <div class="markdown-body">${htmlBody}</div>
+</body>
+</html>`;
+
+  try {
+    const browser = await getPdfBrowser();
+    const page = await browser.newPage();
+    await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      margin: { top: '20mm', right: '20mm', bottom: '20mm', left: '20mm' },
+      printBackground: true,
+    });
+    await page.close();
+
+    const filename = path.basename(resolved, '.md') + '.pdf';
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${filename}"`,
+    });
+    res.end(Buffer.from(pdfBuffer));
+  } catch (err) {
+    console.error('PDF export error:', err);
+    res.status(500).json({ error: 'PDF generation failed' });
+  }
+});
+
 // Start HTTP server
 const server = app.listen(PORT, () => {
   console.log(`Markdown Viewer running at http://localhost:${PORT}`);
@@ -256,4 +355,14 @@ watcher.on('add', filePath => {
 });
 watcher.on('unlink', filePath => {
   broadcast({ type: 'fileDeleted', path: filePath });
+});
+
+// Clean up Puppeteer browser on shutdown
+process.on('SIGTERM', async () => {
+  if (pdfBrowser) await pdfBrowser.close();
+  process.exit(0);
+});
+process.on('SIGINT', async () => {
+  if (pdfBrowser) await pdfBrowser.close();
+  process.exit(0);
 });

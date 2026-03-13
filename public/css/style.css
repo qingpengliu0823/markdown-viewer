@@ -313,18 +313,57 @@ html, body {
   position: relative;
 }
 
+/* Tab bar wrapper */
+#tab-bar-wrapper {
+  display: flex;
+  align-items: stretch;
+  background: var(--tab-inactive-bg);
+  border-bottom: 1px solid var(--border);
+  min-height: var(--tab-height);
+}
+
+#tab-bar-wrapper:not(:has(.tab)) {
+  display: none;
+}
+
 /* Tab bar */
 #tab-bar {
   display: flex;
-  background: var(--tab-inactive-bg);
-  border-bottom: 1px solid var(--border);
+  flex: 1;
   overflow-x: auto;
   min-height: var(--tab-height);
   scrollbar-width: thin;
 }
 
-#tab-bar:empty {
-  display: none;
+/* Export PDF button */
+#export-pdf-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 12px;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--tab-inactive-bg);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+#export-pdf-btn:hover {
+  background: var(--hover-bg);
+  color: var(--accent);
+}
+
+#export-pdf-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#export-pdf-btn.exporting span::after {
+  content: '...';
 }
 
 .tab {
